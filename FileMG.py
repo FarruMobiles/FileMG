@@ -1,28 +1,44 @@
 import os
 import subprocess
 import platform
-import keyboard
-import time
+import sys
+import shutil
+
+def is_wsl():
+    try:
+        with open("/proc/version", "r") as f:
+            return "microsoft" in f.read().lower()
+    except FileNotFoundError:
+        return False
+
+def activate_venv():
+    if sys.prefix != sys.base_prefix:
+        return
+    venv_path = os.path.join(os.getcwd(), "venv")
+    activate_script = os.path.join(venv_path, "bin", "activate")
+    if os.path.exists(venv_path) and os.path.exists(activate_script):
+        print("🔄 Activating Virtual Environment...")
+        os.system(f"source {activate_script} && python3 {' '.join(sys.argv)}")
+        sys.exit()
 
 class ADBFileManager:
     def __init__(self):
+        activate_venv()
+        
         self.current_path = "/sdcard/"
         self.history = []
         self.adb_command = self.detect_adb_environment()
-        self.refresh_files()
     
     def clear_console(self):
         os.system('cls' if os.name == 'nt' else 'clear')
 
     def detect_adb_environment(self):
-        if os.path.exists("/data/data/com.termux/files/usr/bin/adb"):
-            return ["adb"]
-        elif platform.system() in ["Linux", "Darwin"]:
+        termux_adb_path = "/data/data/com.termux/files/usr/bin/adb"
+        if os.path.exists(termux_adb_path):
+            return [termux_adb_path, "shell"]
+        if shutil.which("adb"):
             return ["adb", "shell"]
-        elif platform.system() == "Windows":
-            return ["adb", "shell"]
-        else:
-            raise EnvironmentError("Unsupported OS! ADB may not work.")
+        raise EnvironmentError("❌ ADB not found! Install ADB before using this tool.")
 
     def run_adb(self, command):
         result = subprocess.run(self.adb_command + command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -96,21 +112,24 @@ class ADBFileManager:
     def start(self):
         while True:
             self.show_menu()
-            print("\nENTER OPTION: ", end="", flush=True)
             
-            event = keyboard.read_event(suppress=True)
-            while event.event_type != "down" or event.name not in "12345678":
+            if platform.system() == "Windows" or os.path.exists("/data/data/com.termux/files/usr/bin/adb"):
+                import keyboard
+                print("\nENTER OPTION: ", end="", flush=True)
                 event = keyboard.read_event(suppress=True)
-            choice = event.name
-            print(choice)
-            time.sleep(0.1)
-            keyboard.clear_all_hotkeys()
+                while event.event_type != "down" or event.name not in "12345678":
+                    event = keyboard.read_event(suppress=True)
+                choice = event.name
+            else:
+                choice = input("\nENTER OPTION: ").strip()
             
             if choice == "1":
                 self.clear_console()
                 self.refresh_files()
             elif choice == "2":
-                folder = input("ENTER FOLDER NAME: ").strip()
+                self.clear_console()
+                self.refresh_files()
+                folder = input("\nENTER FOLDER NAME: ").strip()
                 self.change_directory(folder)
                 self.clear_console()
                 self.refresh_files()
@@ -119,29 +138,38 @@ class ADBFileManager:
                 self.clear_console()
                 self.refresh_files()
             elif choice == "4":
-                filename = input("ENTER FILENAME: ").strip()
+                self.clear_console()
+                self.refresh_files()
+                filename = input("\nENTER FILENAME: ").strip()
                 destination = input("ENTER DESTINATION FOLDER: ").strip()
                 self.clear_console()
                 self.copy_file_to_pc(filename, destination)
                 self.refresh_files()
             elif choice == "5":
-                local_file = input("ENTER FILE PATH TO UPLOAD: ").strip()
+                self.clear_console()
+                self.refresh_files()
+                local_file = input("\nENTER FILE PATH TO UPLOAD: ").strip()
                 self.clear_console()
                 self.push_file_to_device(local_file)
                 self.refresh_files()
             elif choice == "6":
-                old_name = input("ENTER OLD FILENAME: ").strip()
+                self.clear_console()
+                self.refresh_files()
+                old_name = input("\nENTER OLD FILENAME: ").strip()
                 new_name = input("ENTER NEW FILENAME: ").strip()
                 self.clear_console()
                 self.rename_file(old_name, new_name)
                 self.refresh_files()
             elif choice == "7":
-                filename = input("ENTER FILENAME TO DELETE: ").strip()
+                self.clear_console()
+                self.refresh_files()
+                filename = input("\nENTER FILENAME TO DELETE: ").strip()
                 self.clear_console()
                 self.delete_file(filename)
                 self.refresh_files()
             elif choice == "8":
-                print("🔴 EXITING...")
+                self.clear_console()
+                print("\n🔴 EXITING...")
                 break
             else:
                 print("❌ INVALID CHOICE. TRY AGAIN.")
