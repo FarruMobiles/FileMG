@@ -57,6 +57,14 @@ FileMG
   pip install -r requirements.txt
   ```
 
+### For Linux / WSL
+
+```sh
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
 ## 📝 Notes
 
 - No virtual environment (venv) is used in this installation.
