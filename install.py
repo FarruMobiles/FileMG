@@ -18,17 +18,17 @@ if os.name == "nt":
         subprocess.run(["powershell", "Start-Process", "python", f'"{__file__}"', "-Verb", "RunAs"])
         sys.exit()
     SYSTEM_PATH = "C:\\Windows\\System32"
-    SHORTCUT_CMD = os.path.join(SYSTEM_PATH, "FileMG.bat")
+    SHORTCUT_CMD = os.path.join(SYSTEM_PATH, "filemg.bat")
 
 elif "ANDROID_ROOT" in os.environ:
     OS_TYPE = "Termux"
     SYSTEM_PATH = os.environ["PREFIX"] + "/bin"
-    SHORTCUT_CMD = os.path.join(SYSTEM_PATH, "FileMG")
+    SHORTCUT_CMD = os.path.join(SYSTEM_PATH, "filemg")
 
 elif sys.platform.startswith("linux"):
     OS_TYPE = "Linux"
     SYSTEM_PATH = "/usr/local/bin"
-    SHORTCUT_CMD = os.path.join(SYSTEM_PATH, "FileMG")
+    SHORTCUT_CMD = os.path.join(SYSTEM_PATH, "filemg")
 
 else:
     print("\n❌ Unsupported OS! Exiting...")
@@ -53,4 +53,4 @@ elif OS_TYPE in ["Linux", "Termux"]:
     os.chmod(SHORTCUT_CMD, 0o755)
 
 print("\n✅ Installation Completed!")
-print("\n💡 Now, you can run the tool globally by typing: FileMG")
+print("\n💡 Now, you can run the tool globally by typing: filemg")
