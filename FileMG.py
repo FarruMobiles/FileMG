@@ -6,25 +6,48 @@ import shutil
 
 def is_wsl():
     try:
-        with open("/proc/version", "r") as f:
-            return "microsoft" in f.read().lower()
-    except FileNotFoundError:
+        release_info = platform.uname().release.lower()
+        return "microsoft" in release_info
+    except:
         return False
 
 def activate_venv():
     if sys.prefix != sys.base_prefix:
         return
     venv_path = os.path.join(os.getcwd(), "venv")
-    activate_script = os.path.join(venv_path, "bin", "activate")
+    if os.name == "nt":
+        activate_script = os.path.join(venv_path, "Scripts", "activate")
+    else:
+        activate_script = os.path.join(venv_path, "bin", "activate")
     if os.path.exists(venv_path) and os.path.exists(activate_script):
-        print("🔄 Activating Virtual Environment...")
-        os.system(f"source {activate_script} && python3 {' '.join(sys.argv)}")
+        if os.name == "nt":
+            os.system(f"{activate_script} && python {' '.join(sys.argv)}")
+        else:
+            os.system(f"source {activate_script} && python3 {' '.join(sys.argv)}")
         sys.exit()
+
+def convert_to_adb_path(local_file):
+    if not isinstance(local_file, str):
+        return None
+    local_file = local_file.replace("\\", "/")
+    if is_wsl():
+        if "C:/" in local_file or "c:/" in local_file:
+            drive, path = local_file.split(":/", 1)
+            local_file = f"/mnt/{drive.lower()}/{path}"
+    if is_wsl():
+        result = subprocess.run(["ls", local_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode != 0:
+            return None
+    if not os.path.exists(local_file):
+        return None
+
+    return local_file
+
+message = ""
 
 class ADBFileManager:
     def __init__(self):
         activate_venv()
-        
         self.current_path = "/sdcard/"
         self.history = []
         self.adb_command = self.detect_adb_environment()
@@ -54,6 +77,7 @@ class ADBFileManager:
                     print(f"📁 {file}")
                 else:
                     print(f"📄 {file}")
+            print(f"\n")
         else:
             print("ℹ️ This Folder is Empty.")
 
@@ -66,40 +90,48 @@ class ADBFileManager:
             if new_path.endswith("/"):
                 self.history.append(self.current_path)
                 self.current_path = new_path
-        self.refresh_files()
 
     def copy_file_to_pc(self, filename, destination):
+        global message
         file_path = os.path.join(self.current_path, filename).replace("\\", "/")
         subprocess.run(["adb", "pull", file_path, destination])
-        print(f"\n✅ {filename} copied to {destination}")
-        self.refresh_files()
+        message = f"\n✅ {filename} Copied To {destination} Successfully."
 
-    def push_file_to_device(self, local_file):
-        if os.path.exists(local_file):
-            local_file = local_file.replace("\\", "/")
-            subprocess.run(["adb", "push", local_file, self.current_path])
-            print(f"\n✅ {local_file} uploaded to {self.current_path}")
-        else:
-            print(f"\n❌ Error: File '{local_file}' not found! Check the path.")
-        self.refresh_files()
+    def push_file_to_device(self, local_file, remote_path="/sdcard/"):
+        global message
+        if not isinstance(local_file, str):
+            return
+        adb_path = convert_to_adb_path(local_file)
+        adb_pathh = os.path.basename(adb_path)
+        if not adb_path:
+            return  
+        if is_wsl():
+            local_file = adb_path
+        if not os.path.exists(local_file):
+            return
+        subprocess.run(["adb", "push", adb_path, remote_path])
+        message = f"\n✅ {adb_pathh} Uploaded To {remote_path} Successfully."
 
     def rename_file(self, old_name, new_name):
+        global message
         old_path = os.path.join(self.current_path, old_name).replace("\\", "/")
         new_path = os.path.join(self.current_path, new_name).replace("\\", "/")
         self.run_adb(["mv", old_path, new_path])
-        print(f"\n✅ {old_name} renamed to {new_name}")
-        self.refresh_files()
+        message = f"\n✅ {old_name} Renamed To {new_name} Successfully."
 
     def delete_file(self, filename):
+        global message
         file_path = os.path.join(self.current_path, filename).replace("\\", "/")
-        confirm = input(f"⚠ Are you sure you want to delete {filename}? (y/n): ")
+        confirm = input(f"\n⚠  Are you sure you want to delete {filename}? (y/n): ")
         if confirm.lower() == 'y':
             self.run_adb(["rm", "-r", file_path])
-            print(f"\n🗑 {filename} deleted.")
-        self.refresh_files()
+            message = f"\n🗑  {filename} Deleted Successfully."
 
     def show_menu(self):
-        print("\n--- ADB File Manager ---\n")
+        print("\nDeveloped by: FarruMobiles")
+        print("----------------------------")
+        print("Ultimate ADB File Manager")
+        print("----------------------------\n")
         print("1️⃣  REFRESH FILES")
         print("2️⃣  OPEN FOLDER")
         print("3️⃣  GO BACK")
@@ -142,37 +174,50 @@ class ADBFileManager:
                 self.refresh_files()
                 filename = input("\nENTER FILENAME: ").strip()
                 destination = input("ENTER DESTINATION FOLDER: ").strip()
-                self.clear_console()
                 self.copy_file_to_pc(filename, destination)
+                self.clear_console()
                 self.refresh_files()
+                print(message)
             elif choice == "5":
                 self.clear_console()
                 self.refresh_files()
                 local_file = input("\nENTER FILE PATH TO UPLOAD: ").strip()
                 self.clear_console()
-                self.push_file_to_device(local_file)
                 self.refresh_files()
+                if isinstance(local_file, str) and local_file:
+                    self.push_file_to_device(local_file)
+                    self.clear_console()
+                    self.refresh_files()
+                    print(message)
+                else:
+                    self.clear_console()
+                    self.refresh_files()
+                    print("\n❌ ERROR: Invalid file path! Please enter a valid file path.")
             elif choice == "6":
                 self.clear_console()
                 self.refresh_files()
                 old_name = input("\nENTER OLD FILENAME: ").strip()
                 new_name = input("ENTER NEW FILENAME: ").strip()
-                self.clear_console()
                 self.rename_file(old_name, new_name)
+                self.clear_console()
                 self.refresh_files()
+                print(message)
             elif choice == "7":
                 self.clear_console()
                 self.refresh_files()
                 filename = input("\nENTER FILENAME TO DELETE: ").strip()
-                self.clear_console()
                 self.delete_file(filename)
-                self.refresh_files()
-            elif choice == "8":
                 self.clear_console()
+                self.refresh_files()
+                print(message)
+            elif choice == "8":
                 print("\n🔴 EXITING...")
+                self.clear_console()
                 break
             else:
-                print("❌ INVALID CHOICE. TRY AGAIN.")
+                self.clear_console()
+                self.refresh_files()
+                print("\n❌ INVALID CHOICE. TRY AGAIN.")
 
 if __name__ == "__main__":
     adb_manager = ADBFileManager()

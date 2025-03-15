@@ -67,7 +67,7 @@ pip install -r requirements.txt
 
 ## 📝 Notes
 
-- No virtual environment (venv) is used in this installation.
+- For use keyboard auto click (ENTER) on Linux/WSL then use virtual environment.
 - You may need **admin/root permissions** to install globally.
 - If running on Linux/Termux, ensure Python is installed (`sudo apt install python3`).
 
