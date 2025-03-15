@@ -46,7 +46,7 @@ python install.py
 Once installed, you can run the tool from anywhere by typing:
 
 ```sh
-FileMG
+filemg
 ```
 
 ## 🛠 Requirements
