@@ -87,7 +87,6 @@ We’re excited to introduce FarruMobiles - ADB File Manager (GUI), a powerful g
 - ✅ Intuitive GUI – No command-line needed
 - ✅ Drag & Drop support for easy file transfers
 - ✅ Batch operations – Manage multiple files at once
-- ✅ File previews – View images, text, and APK details
 - ✅ Auto-refresh – Instantly detect file changes
 
 - **🔗 Download Now:** [GitHub Releases](https://github.com/FarruMobiles/FileMG/releases)
