@@ -1,4 +1,4 @@
-# FileMG - File Management Tool
+# FarruMobiles - ADB File Manager (CLI)
 
 FileMG is a powerful command-line (ADB) file management tool that helps you organize, manage, and manipulate files of connected device efficiently.
 
@@ -75,6 +75,23 @@ pip install -r requirements.txt
 
 This project is open-source and available under the **MIT License**.
 
+---
+
+
+# 🚀 FarruMobiles - ADB File Manager (GUI) Released!
+
+We’re excited to introduce FarruMobiles - ADB File Manager (GUI), a powerful graphical version of our CLI tool FileMG. Now, managing your Android device files via ADB is easier than ever!
+
+## 🎯 Key Features
+
+- ✅ Intuitive GUI – No command-line needed
+- ✅ Drag & Drop support for easy file transfers
+- ✅ Batch operations – Manage multiple files at once
+- ✅ File previews – View images, text, and APK details
+- ✅ Auto-refresh – Instantly detect file changes
+
+- **🔗 Download Now:** [GitHub Releases](https://github.com/FarruMobiles/FileMG/releases)
+  
 ---
 
 📌 Developed by **Farman Qureshi** 🚀
